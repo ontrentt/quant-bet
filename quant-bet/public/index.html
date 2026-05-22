@@ -134,6 +134,13 @@ const ODDS_SPORT = {nba:'basketball_nba', mlb:'baseball_mlb'};
 const NBA_MKT = {'Points':'player_points','Rebounds':'player_rebounds','Assists':'player_assists','3-Pointers Made':'player_threes','Blocked Shots':'player_blocks','Steals':'player_steals','Pts+Reb+Ast':'player_points_rebounds_assists','Pts+Reb':'player_points_rebounds','Pts+Ast':'player_points_assists','Fantasy Score':'player_points_rebounds_assists','Turnovers':'player_turnovers'};
 const MLB_MKT = {'Hits':'batter_hits','Total Bases':'batter_total_bases','RBIs':'batter_rbis','Home Runs':'batter_home_runs','Runs Scored':'batter_runs_scored','Strikeouts':'pitcher_strikeouts','Walks':'pitcher_walks','Hits Allowed':'pitcher_hits_allowed','Pitching Outs':'pitcher_outs','Earned Runs':'pitcher_earned_runs'};
 
+// Multiple CORS proxies to try in order
+const CORS_PROXIES = [
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+];
+
 let ODDS_KEY='', sport=null, oddsEvents=[], ppData=[], gameId=null, gameLabel='';
 let gamePlayers=[], curPlayer=null, slipLegs=[];
 
@@ -167,7 +174,21 @@ function mktKey(sp,stat){
 function fmtOdds(o){return(!o||o===0)?'—':(o>0?'+'+o:''+o);}
 function initials(name){return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
 
-async function selectSport(sp,btn){
+// Try multiple proxies until one works
+async function fetchWithProxy(url) {
+  for (const proxyFn of CORS_PROXIES) {
+    try {
+      const r = await fetch(proxyFn(url), { headers: { 'Accept': 'application/json' } });
+      if (r.ok) {
+        const text = await r.text();
+        return JSON.parse(text);
+      }
+    } catch(e) { continue; }
+  }
+  throw new Error('All proxies failed — PrizePicks may be temporarily unavailable');
+}
+
+async function selectSport(sp, btn){
   if(!ODDS_KEY){alert('Paste your Odds API key first');return;}
   sport=sp;
   document.querySelectorAll('.sport-tab').forEach(b=>b.classList.remove('active'));
@@ -176,9 +197,9 @@ async function selectSport(sp,btn){
   hide('games-card');hide('players-card');hide('profile-pane');$('profile-pane').innerHTML='';
   try{
     const[ev,pp]=await Promise.all([fetchOddsEvents(sp),fetchPP(sp)]);
-    oddsEvents=ev;ppData=pp;
+    oddsEvents=ev; ppData=pp;
     $('sport-status').innerHTML=`<div class="status-ok">✓ ${ev.length} games · ${pp.length} PrizePicks props loaded</div>`;
-    renderGames();show('games-card');
+    renderGames(); show('games-card');
   }catch(e){
     $('sport-status').innerHTML=`<div class="status-err">⚠ ${e.message}</div>`;
   }
@@ -195,9 +216,7 @@ async function fetchOddsEvents(sp){
 
 async function fetchPP(sp){
   const url=`https://api.prizepicks.com/projections?league_id=${PP_LEAGUE[sp]}&per_page=500&single_stat=true&include=new_player`;
-  const r=await fetch(`/api/proxy?target=${encodeURIComponent(url)}`);
-  if(!r.ok)throw new Error(`PrizePicks error ${r.status}`);
-  const d=await r.json();
+  const d = await fetchWithProxy(url);
   const players={};
   (d.included||[]).forEach(inc=>{
     if(inc.type==='new_player'){
@@ -240,7 +259,7 @@ function filterGames(){
 function selectGame(id,label,away,home){
   document.querySelectorAll('.game-card').forEach(c=>c.classList.remove('sel'));
   document.querySelector(`.game-card[data-away="${away}"][data-home="${home}"]`)?.classList.add('sel');
-  gameId=id;gameLabel=label;
+  gameId=id; gameLabel=label;
   const awayKey=away.split(' ').pop().toLowerCase();
   const homeKey=home.split(' ').pop().toLowerCase();
   const matched={};
@@ -256,7 +275,7 @@ function selectGame(id,label,away,home){
   $('player-search').value='';
   renderPlayers();
   show('players-card');
-  hide('profile-pane');$('profile-pane').innerHTML='';
+  hide('profile-pane'); $('profile-pane').innerHTML='';
 }
 
 function backToGames(){hide('players-card');hide('profile-pane');$('profile-pane').innerHTML='';}
@@ -350,7 +369,7 @@ async function loadOdds(player){
       const uEV=((d.underTrue-PP_BE)/PP_BE)*100;
       const bestSide=oEV>=uEV?'More':'Less';
       const bestEV=Math.max(oEV,uEV);
-      p._m=match;p._d=d;p._side=bestSide;p._ev=bestEV;
+      p._m=match; p._d=d; p._side=bestSide; p._ev=bestEV;
       p._prob=bestSide==='More'?d.overTrue:d.underTrue;
       const evPos=bestEV>0;
       $(`podds-${i}`).innerHTML=`<div style="display:flex;gap:5px;align-items:center">
@@ -370,13 +389,12 @@ async function analyzeProp(idx){
   document.querySelectorAll('.prop-line').forEach(l=>l.classList.remove('analyzing'));
   $(`pl-${idx}`)?.classList.add('analyzing');
   const out=$('analysis-out');
-  out.innerHTML=`<div class="analysis-card"><div class="loading-row"><span class="spinner"></span>Running QUANT-BET analysis — ${player.name} · ${prop.stat} ${prop.line}…</div></div>`;
+  out.innerHTML=`<div class="analysis-card"><div class="loading-row"><span class="spinner"></span>Running QUANT-BET — ${player.name} · ${prop.stat} ${prop.line}…</div></div>`;
 
   const d=prop._d;
   const pct=(prop._prob*100).toFixed(1);
   const evPos=prop._ev>0;
   const books=[...new Set([...(prop._m.overBooks||[]),...(prop._m.underBooks||[])])];
-
   const allPropsText=player.props.filter(p=>p._ev!==undefined)
     .map((p,i)=>`${i+1}. ${p.stat} ${p.line} | ${p._side} | True: ${(p._prob*100).toFixed(1)}% | EV: ${p._ev>0?'+':''}${p._ev.toFixed(1)}%`).join('\n');
 
@@ -388,9 +406,7 @@ async function analyzeProp(idx){
       body:JSON.stringify({
         player:{name:player.name,team:player.team,position:player.position},
         prop:{stat:prop.stat,line:prop.line,bestSide:prop._side,truePct:pct,ev:(prop._ev>0?'+':'')+prop._ev.toFixed(1)+'%',avgO:fmtOdds(d.avgO),avgU:fmtOdds(d.avgU),books:books.join(', ')},
-        game:gameLabel,
-        sport:sport,
-        allProps:allPropsText
+        game:gameLabel,sport,allProps:allPropsText
       })
     });
     if(r.ok){const cd=await r.json();aiText=cd.text||null;}
@@ -446,7 +462,7 @@ function renderAI(text){
 function addSlip(player,prop,dir,prob){
   if(slipLegs.find(l=>l.player===player&&l.prop===prop))return;
   slipLegs.push({player,prop,dir,prob});
-  show('slip-card');renderSlip();
+  show('slip-card'); renderSlip();
 }
 function removeSlip(i){slipLegs.splice(i,1);if(!slipLegs.length)hide('slip-card');renderSlip();}
 function renderSlip(){

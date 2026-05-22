@@ -1,34 +1,18 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, anthropic-version, x-anthropic-key');
-
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+ 
   if (req.method === 'OPTIONS') return res.status(200).end();
-
+ 
   const { target } = req.query;
   if (!target) return res.status(400).json({ error: 'Missing target' });
-
+ 
   const decoded = decodeURIComponent(target);
-
+ 
   try {
-    let fetchOpts = { method: req.method };
-
-    if (decoded.includes('anthropic.com')) {
-      const bufs = [];
-      for await (const chunk of req) bufs.push(chunk);
-      const body = Buffer.concat(bufs).toString();
-      const apiKey = req.headers['x-anthropic-key'] || '';
-      fetchOpts = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        body,
-      };
-    }
-
+    let fetchOpts = { method: 'GET' };
+ 
     if (decoded.includes('prizepicks.com')) {
       fetchOpts = {
         method: 'GET',
@@ -44,14 +28,13 @@ export default async function handler(req, res) {
         },
       };
     }
-
+ 
     const upstream = await fetch(decoded, fetchOpts);
     const text = await upstream.text();
-
     res.status(upstream.status)
       .setHeader('Content-Type', upstream.headers.get('content-type') || 'application/json')
       .send(text);
-
+ 
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

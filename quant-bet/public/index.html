@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>QUANT-BET · PrizePicks</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh;padding:20px 16px}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:22px;font-weight:700;margin-bottom:3px}
+.sub{font-size:13px;color:#777;margin-bottom:18px}
+.pp-tag{display:inline-block;background:#7F77DD;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;letter-spacing:.04em;margin-left:8px;vertical-align:middle}
+.card{background:#fff;border:1px solid #e5e5e0;border-radius:12px;padding:16px 20px;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#aaa;margin-bottom:10px}
+label{font-size:12px;color:#666;display:block;margin-bottom:4px}
+input[type=text],input[type=password],select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;color:#1a1a1a;outline:none;font-family:inherit;background:#fff}
+input:focus,select:focus{border-color:#7F77DD;box-shadow:0 0 0 3px rgba(127,119,221,.12)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.btn{padding:10px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;width:100%}
+.btn-primary{background:#7F77DD;color:#fff;padding:12px}
+.btn-primary:hover{background:#6c64cc}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.sport-tabs{display:flex;gap:8px;margin-bottom:12px}
+.sport-tab{flex:1;padding:10px;border-radius:10px;border:1.5px solid #e5e5e0;background:#fff;font-size:14px;font-weight:600;cursor:pointer;text-align:center;font-family:inherit;color:#888;transition:all .15s}
+.sport-tab:hover{border-color:#7F77DD;color:#534AB7}
+.sport-tab.active{border-color:#7F77DD;background:#EEEDFE;color:#3C3489}
+.game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.game-card{border:1px solid #e5e5e0;border-radius:10px;padding:12px 14px;cursor:pointer;background:#fff;transition:all .15s}
+.game-card:hover{border-color:#7F77DD}
+.game-card.sel{border:2px solid #7F77DD;background:#EEEDFE}
+.game-teams{font-size:13px;font-weight:600;margin-bottom:3px}
+.game-time{font-size:11px;color:#aaa}
+.player-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px}
+.player-card{border:1px solid #e5e5e0;border-radius:10px;padding:12px 14px;cursor:pointer;background:#fff;transition:all .15s}
+.player-card:hover{border-color:#7F77DD}
+.player-card.sel{border:2px solid #7F77DD;background:#EEEDFE}
+.prop-line{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e5e5e0;border-radius:8px;margin-bottom:6px;background:#fff;cursor:pointer;transition:all .12s}
+.prop-line:hover,.prop-line.sel{border-color:#7F77DD;background:#f9f9ff}
+.prop-line.analyzing{border-color:#7F77DD;background:#EEEDFE}
+.pill{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px}
+.p-green{background:#EAF3DE;color:#27500A}
+.p-red{background:#FCEBEB;color:#791F1F}
+.p-purple{background:#EEEDFE;color:#3C3489}
+.p-gray{background:#f0f0ea;color:#888}
+.ev-tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.ev-pos{background:#EAF3DE;color:#27500A}
+.ev-neg{background:#FCEBEB;color:#791F1F}
+.ev-neu{background:#f0f0ea;color:#888}
+.metric{background:#f5f5f0;border-radius:8px;padding:10px;text-align:center}
+.metric-val{font-size:15px;font-weight:700}
+.metric-lbl{font-size:10px;color:#aaa;margin-top:2px}
+.pos{color:#27500A}.neg{color:#791F1F}
+.analysis-card{border:1px solid #e5e5e0;border-radius:12px;padding:16px 18px;margin-top:12px;background:#fff}
+.analysis-card.hot{border:2px solid #7F77DD}
+.ai-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#aaa;margin:10px 0 3px}
+.ai-body{font-size:13px;color:#1a1a1a;line-height:1.7}
+.verdict{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;margin-top:12px}
+.v-fire{background:#EAF3DE}.v-lean{background:#FAEEDA}.v-pass{background:#FCEBEB}
+.v-fire .vt{color:#27500A;font-weight:700;font-size:13px}
+.v-lean .vt{color:#633806;font-weight:700;font-size:13px}
+.v-pass .vt{color:#791F1F;font-weight:700;font-size:13px}
+.divider{border-top:1px solid #f0f0ea;margin:12px 0}
+.bar-bg{background:#e0e0da;border-radius:3px;height:5px;flex:1;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.status-ok{background:#EAF3DE;color:#27500A;padding:7px 12px;border-radius:8px;font-size:12px;margin-top:8px}
+.status-err{background:#FCEBEB;color:#791F1F;padding:7px 12px;border-radius:8px;font-size:12px;margin-top:8px;line-height:1.6}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid #AFA9EC;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{display:flex;align-items:center;gap:8px;color:#888;font-size:13px;padding:14px 0}
+.slip-leg{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0ea;font-size:12px}
+.slip-leg:last-child{border-bottom:none}
+.rm{background:none;border:none;color:#ccc;cursor:pointer;font-size:18px;line-height:1;padding:0 2px}
+.rm:hover{color:#E24B4A}
+.search{width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px;background:#fff}
+.search:focus{border-color:#7F77DD;box-shadow:0 0 0 3px rgba(127,119,221,.12)}
+.hidden{display:none}
+.back-btn{background:none;border:none;color:#7F77DD;font-size:13px;font-weight:600;cursor:pointer;padding:0 0 12px;font-family:inherit}
+.back-btn:hover{text-decoration:underline}
+.empty{font-size:13px;color:#aaa;padding:16px 0;text-align:center}
+.add-slip-btn{width:100%;margin-top:10px;padding:9px;border-radius:8px;border:1px dashed #bbb;background:transparent;font-size:12px;color:#888;cursor:pointer;font-family:inherit}
+.add-slip-btn:hover{border-color:#7F77DD;color:#534AB7;background:#EEEDFE}
+.prop-badge{display:inline-block;background:#f0f0ea;border-radius:5px;padding:1px 6px;font-size:10px;color:#666;margin:1px}
+.key-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div style="margin-bottom:16px">
+  <h1>QUANT-BET <span class="pp-tag">PrizePicks</span></h1>
+  <p class="sub">Sport → game → player → instant EV vs 54.3% break-even</p>
+</div>
+
+<!-- Keys -->
+<div class="card" id="keys-card">
+  <div class="card-title">API keys</div>
+  <div class="key-row">
+    <div>
+      <label>The Odds API key</label>
+      <input type="password" id="odds-key" placeholder="Paste your key" autocomplete="off" oninput="saveKeys()"/>
+    </div>
+    <div>
+      <label>Anthropic API key</label>
+      <input type="password" id="anth-key" placeholder="Paste your key" autocomplete="off" oninput="saveKeys()"/>
+    </div>
+  </div>
+  <p style="font-size:11px;color:#aaa">Keys are saved in your browser only — never sent anywhere except the respective APIs.</p>
+</div>
+
+<!-- Sport -->
+<div class="card">
+  <div class="card-title">Select sport</div>
+  <div class="sport-tabs">
+    <button class="sport-tab" id="tab-nba" onclick="selectSport('nba',this)">🏀 NBA</button>
+    <button class="sport-tab" id="tab-mlb" onclick="selectSport('mlb',this)">⚾ MLB</button>
+  </div>
+  <div id="sport-status"></div>
+</div>
+
+<!-- Games -->
+<div class="card hidden" id="games-card">
+  <div class="card-title">Select game</div>
+  <input class="search" id="game-search" placeholder="Search teams..." oninput="filterGames()"/>
+  <div class="game-grid" id="game-grid"></div>
+</div>
+
+<!-- Players -->
+<div class="card hidden" id="players-card">
+  <button class="back-btn" onclick="backToGames()">← Back to games</button>
+  <div class="card-title" id="players-title">Players on PrizePicks</div>
+  <input class="search" id="player-search" placeholder="Search players..." oninput="filterPlayers()"/>
+  <div class="player-grid" id="player-grid"></div>
+</div>
+
+<!-- Profile -->
+<div id="profile-pane" class="hidden"></div>
+
+<!-- Slip -->
+<div class="card hidden" id="slip-card">
+  <div class="card-title">Power play slip</div>
+  <div id="slip-legs"></div>
+  <div id="slip-ev" style="margin-top:10px"></div>
+</div>
+
+</div>
+<script>
+const PROXY   = '/api/proxy?target=';
+const PP_BE   = 0.543;
+const PAYOUTS = {2:3,3:5,4:10,5:20};
+const BOOKS   = 'fanduel,draftkings,betmgm,caesars,pointsbetus';
+const PP_LEAGUE  = {nba:7, mlb:2};
+const ODDS_SPORT = {nba:'basketball_nba', mlb:'baseball_mlb'};
+
+const NBA_MKT = {'Points':'player_points','Rebounds':'player_rebounds','Assists':'player_assists','3-Pointers Made':'player_threes','Blocked Shots':'player_blocks','Steals':'player_steals','Pts+Reb+Ast':'player_points_rebounds_assists','Pts+Reb':'player_points_rebounds','Pts+Ast':'player_points_assists','Fantasy Score':'player_points_rebounds_assists','Turnovers':'player_turnovers'};
+const MLB_MKT = {'Hits':'batter_hits','Total Bases':'batter_total_bases','RBIs':'batter_rbis','Home Runs':'batter_home_runs','Runs Scored':'batter_runs_scored','Strikeouts':'pitcher_strikeouts','Walks':'pitcher_walks','Hits Allowed':'pitcher_hits_allowed','Pitching Outs':'pitcher_outs','Earned Runs':'pitcher_earned_runs'};
+
+let ODDS_KEY='', ANTH_KEY='';
+let sport=null, oddsEvents=[], ppData=[], gameId=null, gameLabel='';
+let gamePlayers=[], curPlayer=null, slipLegs=[];
+
+// ── init ─────────────────────────────────────────────────────────────────────
+window.onload = () => {
+  ODDS_KEY = localStorage.getItem('qb_odds') || '';
+  ANTH_KEY = localStorage.getItem('qb_anth') || '';
+  if (ODDS_KEY) document.getElementById('odds-key').value = ODDS_KEY;
+  if (ANTH_KEY) document.getElementById('anth-key').value = ANTH_KEY;
+};
+function saveKeys(){
+  ODDS_KEY = document.getElementById('odds-key').value.trim();
+  ANTH_KEY = document.getElementById('anth-key').value.trim();
+  localStorage.setItem('qb_odds', ODDS_KEY);
+  localStorage.setItem('qb_anth', ANTH_KEY);
+}
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const show = id => $(id).classList.remove('hidden');
+const hide = id => $(id).classList.add('hidden');
+
+function proxyGet(url) {
+  return fetch(PROXY + encodeURIComponent(url));
+}
+function proxyPost(url, body, extraHeaders={}) {
+  return fetch(PROXY + encodeURIComponent(url), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...extraHeaders },
+    body: JSON.stringify(body)
+  });
+}
+
+function americanToProb(o) {
+  if (!o) return 0.5;
+  return o < 0 ? (-o) / (-o + 100) : 100 / (o + 100);
+}
+function devig(op, up) {
+  const avg = a => a.reduce((x,y)=>x+y,0)/a.length;
+  const ao=avg(op), au=avg(up);
+  const p=americanToProb(ao), q=americanToProb(au), t=p+q;
+  return { overTrue:p/t, underTrue:q/t, avgO:Math.round(ao), avgU:Math.round(au) };
+}
+function mktKey(sp, stat) {
+  const map = sp==='nba' ? NBA_MKT : MLB_MKT;
+  if (map[stat]) return map[stat];
+  const low = stat.toLowerCase();
+  for (const [k,v] of Object.entries(map)) {
+    if (k.toLowerCase()===low || low.includes(k.toLowerCase().split(' ')[0])) return v;
+  }
+  return null;
+}
+function fmtOdds(o) { return (!o||o===0)?'—':(o>0?'+'+o:''+o); }
+function initials(name) { return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
+
+// ── sport ─────────────────────────────────────────────────────────────────────
+async function selectSport(sp, btn) {
+  if (!ODDS_KEY) { alert('Paste your Odds API key first'); return; }
+  sport = sp;
+  document.querySelectorAll('.sport-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  $('sport-status').innerHTML = `<div class="loading-row"><span class="spinner"></span>Loading ${sp.toUpperCase()} games &amp; PrizePicks lines…</div>`;
+  hide('games-card'); hide('players-card'); hide('profile-pane'); $('profile-pane').innerHTML='';
+
+  try {
+    const [ev, pp] = await Promise.all([fetchOddsEvents(sp), fetchPP(sp)]);
+    oddsEvents = ev; ppData = pp;
+    $('sport-status').innerHTML = `<div class="status-ok">✓ ${ev.length} games · ${pp.length} PrizePicks props loaded</div>`;
+    renderGames();
+    show('games-card');
+  } catch(e) {
+    $('sport-status').innerHTML = `<div class="status-err">⚠ ${e.message}</div>`;
+  }
+}
+
+async function fetchOddsEvents(sp) {
+  const url = `https://api.the-odds-api.com/v4/sports/${ODDS_SPORT[sp]}/events?apiKey=${ODDS_KEY}&dateFormat=iso`;
+  const r = await fetch(url);
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.message || 'Odds API error');
+  const cutoff = new Date(Date.now() + 40*3600*1000);
+  return d.filter(e => new Date(e.commence_time) < cutoff);
+}
+
+async function fetchPP(sp) {
+  const url = `https://api.prizepicks.com/projections?league_id=${PP_LEAGUE[sp]}&per_page=500&single_stat=true&include=new_player`;
+  const r = await proxyGet(url);
+  if (!r.ok) throw new Error(`PrizePicks error ${r.status}`);
+  const d = await r.json();
+
+  const players = {};
+  (d.included||[]).forEach(inc => {
+    if (inc.type==='new_player') {
+      players[inc.id] = {
+        name: inc.attributes.name||'',
+        team: inc.attributes.team_name||inc.attributes.team||'',
+        position: inc.attributes.position||''
+      };
+    }
+  });
+  return (d.data||[]).map(proj => {
+    const pid = proj.relationships?.new_player?.data?.id;
+    const pl = players[pid] || { name:'Unknown', team:'', position:'' };
+    return {
+      playerName: pl.name, playerTeam: pl.team, playerPosition: pl.position,
+      statType: proj.attributes.stat_type,
+      line: proj.attributes.line_score,
+      opponent: proj.attributes.description||''
+    };
+  }).filter(p => p.playerName && p.playerName !== 'Unknown');
+}
+
+// ── games ─────────────────────────────────────────────────────────────────────
+function ppCount(ev) {
+  const keys = [ev.away_team, ev.home_team].map(t => t.split(' ').pop().toLowerCase());
+  return ppData.filter(p => keys.some(k => p.playerTeam.toLowerCase().includes(k))).length;
+}
+
+function renderGames() {
+  const el = $('game-grid');
+  if (!oddsEvents.length) { el.innerHTML='<div class="empty">No upcoming games found.</div>'; return; }
+  el.innerHTML = oddsEvents.map(ev => {
+    const t = new Date(ev.commence_time).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+    const cnt = ppCount(ev);
+    return `<div class="game-card" data-away="${ev.away_team}" data-home="${ev.home_team}"
+      onclick="selectGame('${ev.id}','${(ev.away_team+' @ '+ev.home_team).replace(/'/g,"\\'")}','${ev.away_team.replace(/'/g,"\\'")}','${ev.home_team.replace(/'/g,"\\'")}')">
+      <div class="game-teams">${ev.away_team} @ ${ev.home_team}</div>
+      <div class="game-time">${t} · <span style="color:#7F77DD;font-weight:700">${cnt} PP props</span></div>
+    </div>`;
+  }).join('');
+}
+
+function filterGames() {
+  const q = $('game-search').value.toLowerCase();
+  document.querySelectorAll('.game-card').forEach(c => {
+    c.style.display = (c.dataset.away+' '+c.dataset.home).toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+function selectGame(id, label, away, home) {
+  document.querySelectorAll('.game-card').forEach(c=>c.classList.remove('sel'));
+  document.querySelector(`.game-card[data-away="${away}"][data-home="${home}"]`)?.classList.add('sel');
+  gameId=id; gameLabel=label;
+
+  const awayKey = away.split(' ').pop().toLowerCase();
+  const homeKey = home.split(' ').pop().toLowerCase();
+  const matched = {};
+  ppData.forEach(p => {
+    const pt = p.playerTeam.toLowerCase();
+    if (pt.includes(awayKey)||pt.includes(homeKey)) {
+      if (!matched[p.playerName]) matched[p.playerName] = { name:p.playerName, team:p.playerTeam, position:p.playerPosition, props:[] };
+      matched[p.playerName].props.push({ stat:p.statType, line:p.line });
+    }
+  });
+  gamePlayers = Object.values(matched);
+  $('players-title').textContent = `Players — ${label}`;
+  $('player-search').value = '';
+  renderPlayers();
+  show('players-card');
+  hide('profile-pane'); $('profile-pane').innerHTML='';
+}
+
+function backToGames() { hide('players-card'); hide('profile-pane'); $('profile-pane').innerHTML=''; }
+function backToPlayers() { hide('profile-pane'); $('profile-pane').innerHTML=''; show('players-card'); }
+
+// ── players ───────────────────────────────────────────────────────────────────
+function renderPlayers(filter='') {
+  const el = $('player-grid');
+  const list = filter ? gamePlayers.filter(p=>p.name.toLowerCase().includes(filter)) : gamePlayers;
+  if (!list.length) { el.innerHTML='<div class="empty">No PrizePicks props for this game.</div>'; return; }
+  el.innerHTML = list.map(p => {
+    const badges = p.props.slice(0,3).map(pr=>`<span class="prop-badge">${pr.stat} ${pr.line}</span>`).join('');
+    const more = p.props.length>3 ? `<span class="prop-badge">+${p.props.length-3}</span>` : '';
+    const safe = JSON.stringify(p).replace(/\\/g,'\\\\').replace(/"/g,'&quot;');
+    return `<div class="player-card" onclick='selectPlayer(${safe})'>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <div style="width:32px;height:32px;border-radius:50%;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#534AB7;flex-shrink:0">${initials(p.name)}</div>
+        <div><div style="font-size:13px;font-weight:600">${p.name}</div><div style="font-size:11px;color:#888">${p.team}</div></div>
+      </div>
+      <div>${badges}${more}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterPlayers() { renderPlayers($('player-search').value.toLowerCase()); }
+
+// ── player profile ────────────────────────────────────────────────────────────
+async function selectPlayer(player) {
+  curPlayer = player;
+  hide('players-card');
+  const pane = $('profile-pane');
+  pane.innerHTML = `
+    <button class="back-btn" onclick="backToPlayers()">← Back to players</button>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:44px;height:44px;border-radius:50%;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#534AB7;flex-shrink:0">${initials(player.name)}</div>
+        <div>
+          <div style="font-size:17px;font-weight:700">${player.name}</div>
+          <div style="font-size:12px;color:#888">${player.team} · ${player.position||'—'} · <span style="color:#7F77DD;font-weight:700">${player.props.length} props</span></div>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#aaa;margin-bottom:8px">Click any line to analyze</div>
+      <div id="prop-lines"></div>
+    </div>
+    <div id="analysis-out"></div>`;
+  show('profile-pane');
+
+  renderPropLines(player);
+  await loadOdds(player);
+}
+
+function renderPropLines(player) {
+  $('prop-lines').innerHTML = player.props.map((p,i) => `
+    <div class="prop-line" id="pl-${i}" onclick="analyzeProp(${i})">
+      <div style="font-size:13px;font-weight:600;min-width:130px">${p.stat}</div>
+      <div style="font-size:15px;font-weight:700;min-width:42px">${p.line}</div>
+      <div style="flex:1"></div>
+      <div id="podds-${i}"><span class="spinner" style="width:11px;height:11px;border-width:1.5px"></span></div>
+    </div>`).join('');
+}
+
+async function loadOdds(player) {
+  const ev = oddsEvents.find(e=>e.id===gameId);
+  if (!ev) return;
+  const mktKeys = [...new Set(player.props.map(p=>mktKey(sport,p.stat)).filter(Boolean))];
+  if (!mktKeys.length) {
+    player.props.forEach((_,i) => { if($(`podds-${i}`)) $(`podds-${i}`).innerHTML='<span class="p-gray pill">No market</span>'; });
+    return;
+  }
+  try {
+    const url = `https://api.the-odds-api.com/v4/sports/${ODDS_SPORT[sport]}/events/${gameId}/odds?apiKey=${ODDS_KEY}&regions=us&markets=${mktKeys.join(',')}&oddsFormat=american&bookmakers=${BOOKS}`;
+    const r = await fetch(url);
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.message);
+
+    const pLow = player.name.toLowerCase();
+    const omap = {};
+    (data.bookmakers||[]).forEach(bk => {
+      (bk.markets||[]).forEach(mkt => {
+        (mkt.outcomes||[]).forEach(oc => {
+          if (!oc.description?.toLowerCase().includes(pLow)) return;
+          const side = oc.name.toLowerCase().includes('over')||oc.name.toLowerCase().includes('more') ? 'over' : 'under';
+          const k = mkt.key+'::'+oc.point;
+          if (!omap[k]) omap[k] = { mkt:mkt.key, point:oc.point, over:[], under:[], overBooks:[], underBooks:[] };
+          omap[k][side].push(oc.price);
+          if (!omap[k][side+'Books'].includes(bk.title)) omap[k][side+'Books'].push(bk.title);
+        });
+      });
+    });
+
+    player.props.forEach((p,i) => {
+      const mk = mktKey(sport, p.stat);
+      if (!mk || !$(`podds-${i}`)) return;
+      const candidates = Object.values(omap).filter(o=>o.mkt===mk&&o.over.length&&o.under.length);
+      const match = candidates.find(c=>Math.abs(c.point-p.line)<0.6) || candidates[0];
+      if (!match) { $(`podds-${i}`).innerHTML='<span class="pill p-gray">No odds</span>'; return; }
+
+      const d = devig(match.over, match.under);
+      const oEV = ((d.overTrue-PP_BE)/PP_BE)*100;
+      const uEV = ((d.underTrue-PP_BE)/PP_BE)*100;
+      const bestSide = oEV>=uEV ? 'More' : 'Less';
+      const bestEV = Math.max(oEV, uEV);
+      p._m=match; p._d=d; p._side=bestSide; p._ev=bestEV;
+      p._prob = bestSide==='More' ? d.overTrue : d.underTrue;
+      const evPos = bestEV>0;
+      $(`podds-${i}`).innerHTML=`<div style="display:flex;gap:5px;align-items:center">
+        <span class="pill ${bestSide==='More'?'p-green':'p-red'}" style="font-size:10px">${bestSide}</span>
+        <span class="ev-tag ${evPos?'ev-pos':bestEV<-2?'ev-neg':'ev-neu'}">${evPos?'+':''}${bestEV.toFixed(1)}%</span>
+      </div>`;
+    });
+  } catch(e) {
+    player.props.forEach((_,i) => { if($(`podds-${i}`)) $(`podds-${i}`).innerHTML='<span class="pill p-gray" style="font-size:10px">Err</span>'; });
+  }
+}
+
+async function analyzeProp(idx) {
+  const player = curPlayer;
+  const prop = player.props[idx];
+  if (!prop._d) { alert('Odds still loading — try again in a moment.'); return; }
+  document.querySelectorAll('.prop-line').forEach(l=>l.classList.remove('analyzing'));
+  $(`pl-${idx}`)?.classList.add('analyzing');
+  const out = $('analysis-out');
+  out.innerHTML=`<div class="analysis-card"><div class="loading-row"><span class="spinner"></span>Running QUANT-BET — ${player.name} · ${prop.stat} ${prop.line}…</div></div>`;
+
+  const d = prop._d;
+  const pct = (prop._prob*100).toFixed(1);
+  const evPos = prop._ev > 0;
+  const books = [...new Set([...(prop._m.overBooks||[]),...(prop._m.underBooks||[])])];
+  const ai = await callAI(player, prop);
+
+  out.innerHTML = `
+    <div class="analysis-card${evPos?' hot':''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div>
+          ${evPos?'<div style="margin-bottom:5px"><span class="pill p-purple">★ QUANT-BET</span></div>':''}
+          <div style="font-size:17px;font-weight:700">${prop.stat} <span style="font-weight:400;color:#888">${prop.line}</span></div>
+          <div style="font-size:12px;color:#888;margin-top:2px">${player.name} · ${gameLabel}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+          <span class="pill ${prop._side==='More'?'p-green':'p-red'}">${prop._side}</span>
+          <span class="ev-tag ${evPos?'ev-pos':prop._ev<-2?'ev-neg':'ev-neu'}" style="font-size:12px">${evPos?'+':''}${prop._ev.toFixed(1)}% EV</span>
+        </div>
+      </div>
+      <div class="g4" style="margin:10px 0">
+        <div class="metric"><div class="metric-val ${evPos?'pos':'neg'}">${pct}%</div><div class="metric-lbl">True probability</div></div>
+        <div class="metric"><div class="metric-val">54.3%</div><div class="metric-lbl">PP break-even</div></div>
+        <div class="metric"><div class="metric-val">${fmtOdds(d.avgO)}</div><div class="metric-lbl">Over avg</div></div>
+        <div class="metric"><div class="metric-val">${fmtOdds(d.avgU)}</div><div class="metric-lbl">Under avg</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:11px;color:#aaa;min-width:80px">vs 54.3%</span>
+        <div class="bar-bg"><div class="bar-fill" style="width:${Math.min(parseFloat(pct),100)}%;background:${evPos?'#639922':'#E24B4A'}"></div></div>
+        <span style="font-size:12px;font-weight:700;min-width:40px">${pct}%</span>
+      </div>
+      <div style="margin-bottom:8px">${books.map(b=>`<span style="display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;background:#EEEDFE;color:#3C3489;margin:2px">${b}</span>`).join('')}</div>
+      <div class="divider"></div>
+      ${ai ? renderAI(ai) : '<div style="color:#aaa;font-size:13px;padding:6px 0">AI analysis unavailable — use EV data above.</div>'}
+      ${prop._ev>4?`<button class="add-slip-btn" onclick="addSlip('${player.name.replace(/'/g,"\\'")}','${prop.stat} ${prop.line}','${prop._side}',${parseFloat(pct)})">+ Add to power play slip</button>`:''}
+    </div>`;
+}
+
+function renderAI(text) {
+  const lines = text.split('\n');
+  let html='', started=false;
+  lines.forEach(line => {
+    const t = line.trim().replace(/\*\*/g,'');
+    if (!t) return;
+    if (t.match(/^(THE BEST BET|THE WHY|THE EVIDENCE|SIMULATION|VERDICT)/i)) {
+      html += `<div class="ai-label">${t}</div>`; started=true;
+    } else if (started) {
+      html += `<div class="ai-body">${t}</div>`;
+    }
+  });
+  const u = text.toUpperCase();
+  const vtype = u.includes('FIRE')?'fire':u.includes('PASS')?'pass':'lean';
+  const icons = {fire:'🔥',lean:'📈',pass:'⛔'};
+  const labels = {fire:'FIRE — strong PrizePicks edge',lean:'LEAN — moderate edge',pass:'PASS — no edge here'};
+  return html + `<div class="verdict v-${vtype}"><span style="font-size:20px">${icons[vtype]}</span><span class="vt">${labels[vtype]}</span></div>`;
+}
+
+async function callAI(player, prop) {
+  if (!ANTH_KEY) return null;
+  const sp = sport==='nba'?'NBA':'MLB';
+  const d = prop._d;
+  const allProps = player.props.filter(p=>p._ev!==undefined)
+    .map((p,i)=>`${i+1}. ${p.stat} ${p.line} | ${p._side} | True: ${(p._prob*100).toFixed(1)}% | EV: ${p._ev>0?'+':''}${p._ev.toFixed(1)}%`).join('\n');
+  const prompt = `You are QUANT-BET, elite ${sp} analyst. PrizePicks only — 54.3% break-even.
+Player: ${player.name} (${player.team}, ${player.position||'—'})
+Game: ${gameLabel}
+FOCUSED PROP: ${prop.stat} ${prop.line} | Best: ${prop._side} | True prob: ${(prop._prob*100).toFixed(1)}% | EV: ${prop._ev>0?'+':''}${prop._ev.toFixed(1)}% | Over avg: ${fmtOdds(d.avgO)} | Under avg: ${fmtOdds(d.avgU)}
+ALL PROPS:\n${allProps}
+Using Pillar C (spatial matchup), Pillar D (mean reversion), Pillar E (juice as signal):
+THE BEST BET: [Stat] [Line] [More/Less]
+THE WHY: [2-3 sentences on the edge]
+THE EVIDENCE: [Key metrics]
+SIMULATION: [Range and win prob vs 54.3%]
+VERDICT: FIRE / LEAN / PASS — one sentence`;
+
+  try {
+    const r = await fetch(PROXY + encodeURIComponent('https://api.anthropic.com/v1/messages'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-anthropic-key': ANTH_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:800, messages:[{role:'user',content:prompt}] })
+    });
+    if (!r.ok) return null;
+    const cd = await r.json();
+    return (cd.content||[]).map(b=>b.text||'').join('\n').trim() || null;
+  } catch(e) { return null; }
+}
+
+// ── slip ─────────────────────────────────────────────────────────────────────
+function addSlip(player, prop, dir, prob) {
+  if (slipLegs.find(l=>l.player===player&&l.prop===prop)) return;
+  slipLegs.push({player,prop,dir,prob});
+  show('slip-card'); renderSlip();
+}
+function removeSlip(i) {
+  slipLegs.splice(i,1);
+  if (!slipLegs.length) hide('slip-card');
+  renderSlip();
+}
+function renderSlip() {
+  $('slip-legs').innerHTML = slipLegs.map((l,i)=>`
+    <div class="slip-leg">
+      <button class="rm" onclick="removeSlip(${i})">×</button>
+      <span style="flex:1;font-weight:600;font-size:13px">${l.player}</span>
+      <span style="color:#888;font-size:11px;margin-right:6px">${l.prop}</span>
+      <span class="pill ${l.dir==='More'?'p-green':'p-red'}" style="font-size:10px">${l.dir}</span>
+      <span style="color:#aaa;font-size:11px;min-width:36px;text-align:right">${l.prob.toFixed(1)}%</span>
+    </div>`).join('');
+  const n = slipLegs.length;
+  const evEl = $('slip-ev');
+  if (n<2) { evEl.innerHTML='<p style="font-size:11px;color:#aaa">Add 2+ legs to calculate EV.</p>'; return; }
+  const payout = PAYOUTS[n]||(n*4);
+  const win = slipLegs.reduce((a,l)=>a*(l.prob/100),1);
+  const ev = ((win*payout)-1)*100;
+  const evPos = ev>0;
+  evEl.innerHTML=`
+    <div class="g3" style="margin-bottom:10px">
+      <div class="metric"><div class="metric-val">${n}-leg</div><div class="metric-lbl">Legs</div></div>
+      <div class="metric"><div class="metric-val">${payout}x</div><div class="metric-lbl">Payout</div></div>
+      <div class="metric"><div class="metric-val ${evPos?'pos':'neg'}">${evPos?'+':''}${ev.toFixed(1)}%</div><div class="metric-lbl">Slip EV</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:11px;color:#aaa;min-width:100px">Combined win</span>
+      <div class="bar-bg"><div class="bar-fill" style="width:${Math.min(win*100,100).toFixed(1)}%;background:${evPos?'#639922':'#888'}"></div></div>
+      <span style="font-size:12px;font-weight:700;min-width:40px">${(win*100).toFixed(1)}%</span>
+    </div>`;
+}
+</script>
+</body>
+</html>
